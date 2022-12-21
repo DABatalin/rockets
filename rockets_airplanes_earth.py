@@ -263,7 +263,7 @@ def main():
 
     time_slider.on_changed(update_time)
     plt.axis('off')
-    plt.show()
+    # plt.show()
 
     fig, axs = plt.subplots(nrows=3, figsize = (8, 8))
     axs[0].set_xlabel('t, с')
