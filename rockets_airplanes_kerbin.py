@@ -212,13 +212,41 @@ def ShowSpeed(ax, path):
     ax.plot(t[:25000], v[:25000])
     ax.grid()
 
-# График скорости из ksp
-def ShowSpeedAlternate(ax):
+def getAllDots():
     with open("logs", encoding = "utf-8") as file:
         data = load(file)
         time = [int(i) for i in data.keys()] [:45]
         speed = list(data.values()) [:45]
-    ax.plot(time, speed)
+
+    array = []
+
+    for i in range(len(time) - 1):
+        start = speed[i]
+        array.append(start)
+        end = speed[i + 1]
+        step = (end - start) / (time[i + 1] - time[i])
+        for j in range(time[i] + 1, time[i + 1]):
+            array.append(start + step * (j - time[i]))
+    array.append(speed[-1])
+
+    return array
+
+# График скорости из ksp
+def ShowSpeedAlternate(ax):
+    array = getAllDots()
+
+    ax.plot([(i + 1) for i in range(len(array))], array)
+    ax.grid()
+
+# График разности скоростей
+def showModSpeed(ax, path):
+    T = 25000
+    t, stages = ConcatenateStages(path)
+    v = np.sqrt(stages[1, :]**2 + (stages[0, :]*stages[3, :])**2)
+
+    array = getAllDots()
+
+    ax.plot(t[:T], [abs(v[i] - array[i]) for i in range(T)])
     ax.grid()
 
 # График угловой скорости
@@ -227,6 +255,8 @@ def ShowAngularVelocity(ax, path):
     print("Угловая скорость на геостационарной орбите:", stages[3][-1])
     ax.plot(t[:25000], stages[3,:][:25000])
     ax.grid()
+
+
 
 def GetPoints(path, t):
     if t == 0:
@@ -277,14 +307,16 @@ def main():
     plt.subplots_adjust(left = 0.1, bottom = 0.1)
     axs[0].set_xlabel('t, с')
     axs[0].set_ylabel('V, м/с')
-    axs[0].set_title("Расчетная скорость")
+    axs[0].set_title("График скорости")
     axs[1].set_xlabel('t, с')
     axs[1].set_ylabel('V, м/с')
-    axs[1].set_title("Реальная скорость из KSP")
+    axs[1].set_title("График разности скоростей")
 
     # ShowHeight(axs[0], path)
     ShowSpeed(axs[0], path)
-    ShowSpeedAlternate(axs[1])
+    ShowSpeedAlternate(axs[0])
+    axs[0].legend(["Расчёт", "KSP"])
+    showModSpeed(axs[1], path)
     # ShowAngularVelocity(axs[2], path)
     plt.show()
 
